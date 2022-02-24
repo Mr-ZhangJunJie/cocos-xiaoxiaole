@@ -1,0 +1,15 @@
+{
+  "name": "xiaoxiaole",
+  "type": "3d",
+  "uuid": "cde61782-1473-48ee-9897-05dbc2fcf15b",
+  "version": "3.4.0",
+  "creator": {
+    "version": "3.4.0"
+  },
+  "dependencies": {
+    "protobufjs": "^6.11.2",
+    "tantan-frontend-utils": "^0.0.19",
+    "tantan-js-sdk": "^2.2.1",
+    "tantan-live-frontend-bridge": "^0.0.19"
+  }
+}

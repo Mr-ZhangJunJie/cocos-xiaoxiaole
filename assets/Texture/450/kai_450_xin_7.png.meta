@@ -1,0 +1,68 @@
+{
+  "ver": "1.0.22",
+  "importer": "image",
+  "imported": true,
+  "uuid": "5c946068-d664-4586-a0aa-1104175c00a6",
+  "files": [
+    ".png",
+    ".json"
+  ],
+  "subMetas": {
+    "kai_450_xin_7": {
+      "ver": "1.0.4",
+      "uuid": "ce619e17-83f8-429f-98d2-faa18903eda5",
+      "rawTextureUuid": "5c946068-d664-4586-a0aa-1104175c00a6",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 82,
+      "height": 72,
+      "rawWidth": 82,
+      "rawHeight": 72,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {},
+      "importer": "*",
+      "imported": false,
+      "files": [],
+      "userData": {},
+      "displayName": "",
+      "id": "",
+      "name": ""
+    },
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "5c946068-d664-4586-a0aa-1104175c00a6@6c48a",
+      "displayName": "kai_450_xin_7",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "5c946068-d664-4586-a0aa-1104175c00a6"
+      },
+      "ver": "1.0.21",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "hasAlpha": true,
+    "type": "texture",
+    "redirect": "5c946068-d664-4586-a0aa-1104175c00a6@6c48a"
+  }
+}

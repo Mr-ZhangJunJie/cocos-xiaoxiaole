@@ -1,0 +1,68 @@
+{
+  "ver": "1.0.22",
+  "importer": "image",
+  "imported": true,
+  "uuid": "76bdc9e3-1e56-4e16-9a83-7cc0d2dcdf61",
+  "files": [
+    ".png",
+    ".json"
+  ],
+  "subMetas": {
+    "kai_231_destroy_light_15": {
+      "ver": "1.0.4",
+      "uuid": "229adcb1-710e-49a6-ad3a-f54b8a6b0d1a",
+      "rawTextureUuid": "76bdc9e3-1e56-4e16-9a83-7cc0d2dcdf61",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 85,
+      "height": 87,
+      "rawWidth": 85,
+      "rawHeight": 87,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {},
+      "importer": "*",
+      "imported": false,
+      "files": [],
+      "userData": {},
+      "displayName": "",
+      "id": "",
+      "name": ""
+    },
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "76bdc9e3-1e56-4e16-9a83-7cc0d2dcdf61@6c48a",
+      "displayName": "kai_231_destroy_light_15",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "76bdc9e3-1e56-4e16-9a83-7cc0d2dcdf61"
+      },
+      "ver": "1.0.21",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "hasAlpha": true,
+    "type": "texture",
+    "redirect": "76bdc9e3-1e56-4e16-9a83-7cc0d2dcdf61@6c48a"
+  }
+}
