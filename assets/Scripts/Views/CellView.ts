@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, AnimationClip, SpriteFrame, AnimationComponent, Animation, Sprite, tween, Vec2, Vec3, Color, Quat } from 'cc'
+import { _decorator, Component, Node, AnimationClip, SpriteFrame, AnimationComponent, Animation, Sprite, tween, Vec2, Vec3, Color, Quat, Vec4 } from 'cc'
 const { ccclass, property } = _decorator
 import CellModel from '../Model/CellModel'
 import { CELL_WIDTH, CELL_HEIGHT, CELL_STATUS, ANITIME } from '../Model/ConstValue'
@@ -40,7 +40,6 @@ export class CellView extends Component {
     this.model = model
     const x = model.startX
     const y = model.startY
-    // console.log(CELL_WIDTH * (x - 0.5), CELL_HEIGHT * (y - 0.5))
 
     this.node.setPosition(CELL_WIDTH * (x - 0.5), CELL_HEIGHT * (y - 0.5), 0)
     const animation: AnimationComponent = this.node.getComponent(Animation)
@@ -114,10 +113,10 @@ export class CellView extends Component {
           }
         })
       } else if (c.action === 'toShake') {
-        //
         animal.union()
-        animal.by(0.06, { rotation: new Quat(Math.sin(90), Math.sin(90), Math.sin(30), Math.cos(90)) })
-        animal.by(0.12, { rotation: new Quat(Math.sin(90), Math.sin(90), Math.sin(-60), Math.cos(90)) })
+        animal.to(0.06, { eulerAngles: new Vec3(0, 0, 30) })
+        animal.to(0.12, { eulerAngles: new Vec3(0, 0, -30) })
+        animal.union()
         animal.repeat(2)
       }
       curTime = c.playTime + c.keepTime

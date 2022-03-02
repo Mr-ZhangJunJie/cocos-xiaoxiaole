@@ -6,6 +6,7 @@ import { CELL_HEIGHT, CELL_WIDTH, GRID_HEIGHT, GRID_PIXEL_HEIGHT, GRID_PIXEL_WID
 import { AudioUtils } from '../Utils/AudioUtils'
 import { CellView } from './CellView'
 import { EffectLayer } from './EffectLayer'
+import { EFECT_TYPE } from '../Types/index'
 
 /**
  * Predefined variables
@@ -57,7 +58,10 @@ export class ContainerView extends Component {
   setController(controller: GameController) {
     this.controller = controller
   }
-
+  /**
+   * 根据 CellModel 生成对应的CellView
+   * @param cellsModels
+   */
   initWithCellModels(cellsModels: CellModel[][]) {
     this.cellViews = []
     for (let i = 1; i <= GRID_WIDTH; i++) {
@@ -71,7 +75,7 @@ export class ContainerView extends Component {
         this.node.addChild(aniView)
 
         const cellViewScript = aniView.getComponent('CellView')
-        // 设置单元格的位置和动画
+        // 设置单元格的位置 并 禁止动画
         ;(cellViewScript as CellView).initWithModel(cellsModels[i][j])
 
         this.cellViews[i][j] = aniView
@@ -95,7 +99,7 @@ export class ContainerView extends Component {
 
         if (cellPos) {
           const changeModels = this.selectCell(cellPos)
-          // this.isCanMove = changeModels.length < 3
+          this.isCanMove = changeModels.length < 3
         } else {
           this.isCanMove = false
         }
@@ -106,13 +110,7 @@ export class ContainerView extends Component {
     // 滑动操作逻辑
     this.node.on(Node.EventType.TOUCH_MOVE, function () {}, this)
 
-    this.node.on(
-      Node.EventType.TOUCH_CANCEL,
-      function (event: EventTouch) {
-        // console.log("touchCancell");
-      },
-      this
-    )
+    this.node.on(Node.EventType.TOUCH_CANCEL, function (event: EventTouch) {}, this)
   }
 
   // 根据点击的像素位置，转换成网格中的位置
@@ -159,18 +157,18 @@ export class ContainerView extends Component {
     // changeModels 改变的单元格，efectsQueue 效果队列，不消除的时候为undefined
     const [changeModels, efectsQueue] = this.controller.selectCell(cellPos)
     // 播放爆炸效果，当不能消时，不执行
-    this.playEffect(efectsQueue)
+    // this.playEffect(efectsQueue)
     // 动画期间禁止操作，之后播放相应step的音乐
     this.disableTouch(this.getPlayAniTime(changeModels), this.getStep(efectsQueue))
-
-    // 移动格子
+    // 移动格子，播放有变化的格子动画
     this.updateView(changeModels)
     this.controller.cleanCmd()
-
     if (changeModels.length >= 2) {
+      // 清空所有背景
       this.updateSelect(new Vec2(-1, -1))
       this.audioUtils.playSwap()
     } else {
+      // 选中当前cell
       this.updateSelect(cellPos)
       this.audioUtils.playClick()
     }
@@ -199,7 +197,7 @@ export class ContainerView extends Component {
     for (let i = 0; i < changeModels.length; i++) {
       const model = changeModels[i]
       // 通过model 映射  view
-      const viewInfo = this.findiewByModel(model)
+      const viewInfo = this.findViewByModel(model)
       let view: Node = null
       // 如果原来的cell不存在，则新建 view
       if (!viewInfo) {
@@ -216,6 +214,7 @@ export class ContainerView extends Component {
       }
       const cellScript = view.getComponent('CellView')
       ;(cellScript as CellView).updateView() // 执行移动操作
+
       if (!model.isDeath) {
         newCellViewInfo.push({
           model,
@@ -234,12 +233,13 @@ export class ContainerView extends Component {
    * @param model
    *
    */
-  findiewByModel(model: CellModel) {
-    for (var i = 1; i <= GRID_WIDTH; i++) {
-      for (var j = 1; j <= GRID_HEIGHT; j++) {
-        const cellView: Node = this.cellViews[i][i]
-        const cellViewScript: Component = cellView.getComponent('CellView')
-        if (cellView && (cellViewScript as CellView).model == model) {
+  findViewByModel(model: CellModel) {
+    for (let i = 1; i <= GRID_WIDTH; i++) {
+      for (let j = 1; j <= GRID_HEIGHT; j++) {
+        const cellView: Node = this.cellViews[i][j]
+        const cellViewScript = cellView && cellView.getComponent('CellView')
+
+        if (cellView && (cellViewScript as CellView).model === model) {
           return { view: this.cellViews[i][j], x: j, y: i }
         }
       }
@@ -247,7 +247,7 @@ export class ContainerView extends Component {
     return null
   }
 
-  playEffect(efectsQueue) {
+  playEffect(efectsQueue: EFECT_TYPE[]) {
     this.effectLayer.playEffects(efectsQueue)
   }
 

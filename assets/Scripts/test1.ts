@@ -27,13 +27,7 @@ export class test1 extends Component {
   }
 
   onLoad() {
-    this.node.on(
-      Node.EventType.TOUCH_START,
-      function (event: EventTouch) {
-        // console.log(event.getUILocation())
-      },
-      this
-    )
+    this.node.on(Node.EventType.TOUCH_START, function (event: EventTouch) {}, this)
   }
 
   // update (deltaTime: number) {

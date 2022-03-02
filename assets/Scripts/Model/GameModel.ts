@@ -2,6 +2,7 @@ import { Vec2 } from 'cc'
 import CellModel from './CellModel'
 import { mergePointArray, exclusivePoint } from '../Utils/ModelUtils'
 import { CELL_BASENUM, CELL_STATUS, GRID_HEIGHT, GRID_WIDTH, CELL_TYPE, ANITIME } from './ConstValue'
+import { EFECT_TYPE } from '../Types/index'
 
 type CELL_STATUS_TYPE = [Vec2[], CELL_STATUS, CELL_TYPE | null, Vec2]
 
@@ -16,9 +17,10 @@ export default class GameModel {
 
   changeModels: CellModel[] = []
 
-  efectsQueue: [] = []
-
+  efectsQueue: EFECT_TYPE[] = []
+  // 播放节点
   curTime: number = 0
+
   // 初始化单元格数据，并且mock的数据不存在连续3个及以上的情况
   init(cellTypeNum: number) {
     this.cells = []
@@ -38,7 +40,6 @@ export default class GameModel {
           continue
         }
 
-        // debugger
         let flag: boolean = true
         while (flag) {
           flag = false
@@ -62,8 +63,8 @@ export default class GameModel {
   getCells() {
     return this.cells
   }
-  // pos  格子坐标
-  selectCell(pos: Vec2) {
+  // pos  格子坐标，哪些格子需要改变，及动画
+  selectCell(pos: Vec2): [CellModel[], EFECT_TYPE[]] {
     this.changeModels = [] // 发生改变的model，将作为返回值，给view播动画
     this.efectsQueue = [] // 动物消失。爆炸等特效
     const lastPos = this.lastPos
@@ -103,24 +104,224 @@ export default class GameModel {
 
       this.lastPos = new Vec2(-1, -1)
       // 返回添加的单元格
-      return [this.changeModels]
+      return [this.changeModels, []]
     } else {
-      // 鸟，或者是连续3个以上
+      //  爆炸，或者是连续3个以上
       this.lastPos = new Vec2(-1, -1)
+      // 移动位置
       curClickCell.moveTo(lastPos, this.curTime)
       lastClickCell.moveTo(pos, this.curTime)
+
       let checkPoint = [pos, lastPos]
       this.curTime += ANITIME.TOUCH_MOVE
-      console.log('消除 === processCrush')
-
-      // this.processCrush(checkPoint)
+      // 消除
+      this.processCrush(checkPoint)
       return [this.changeModels, this.efectsQueue]
     }
   }
 
   // 消除
   processCrush(checkPoint: Vec2[]) {
-    console.log('消除')
+    let cycleCount: number = 0
+    // 消除后，继续判断并消除
+    while (checkPoint.length > 0) {
+      let bombModels: CellModel[] = []
+      //  特殊消除
+      if (cycleCount === 0 && checkPoint.length === 2) {
+        //特殊消除
+        let pos1 = checkPoint[0]
+        let pos2 = checkPoint[1]
+        // 最新model
+        let model1: CellModel = this.cells[pos1.y][pos1.x]
+        let model2: CellModel = this.cells[pos2.y][pos2.x]
+        if (model1.status === CELL_STATUS.BIRD || model2.status === CELL_STATUS.BIRD) {
+          if (model1.status === CELL_STATUS.BIRD) {
+            model1.type = model2.type
+            bombModels.push(model1)
+          } else {
+            model2.type = model1.type
+            bombModels.push(model2)
+          }
+        }
+      }
+
+      for (const i in checkPoint) {
+        const pos = checkPoint[i]
+        if (!this.cells[pos.y][pos.x]) continue
+        // 当前点可以消除的点
+        const [result, newCellStatus, newCellType, crushPoint] = this.checkPoint(pos.x, pos.y, false)
+
+        if (result.length < 3) {
+          continue
+        }
+        for (const j in result) {
+          const model: CellModel = this.cells[result[j].y][result[j].x]
+          // 销毁Cell，并且添加销毁动作
+          this.crushCell(result[j].x, result[j].y, false, cycleCount)
+          if (model.status !== CELL_STATUS.COMMON) {
+            // 如果消除的表格具有bomb类型表格
+            bombModels.push(model)
+          }
+        }
+        // 触发消除的节点位置创建新的Cell（三个的时候不需要创建，但现在创建啦）
+        this.createNewCell(crushPoint, newCellStatus, newCellType)
+      }
+      // 执行爆炸效果
+      // this.processBomb(bombModels, cycleCount)
+      this.curTime += ANITIME.DIE
+      // 创建新的cell并且下落
+      checkPoint = this.down()
+      cycleCount++
+    }
+  }
+  // 生成新的cell
+  /**
+   *
+   * @param pos 新表格的位置
+   * @param status 表格的status
+   * @param type 表格的类型
+   */
+  createNewCell(pos: Vec2, status: CELL_STATUS, type: number) {
+    if (status === CELL_STATUS.COMMON) {
+      return
+    }
+    if (status === CELL_STATUS.BIRD) {
+      type = CELL_TYPE.BIRD
+    }
+    let model = new CellModel()
+    this.cells[pos.y][pos.x] = model
+    model.init(type)
+    model.setStartXY(pos.x, pos.y)
+    model.setXY(pos.x, pos.y)
+    model.setStatus(status)
+    model.setVisible(0, false)
+    model.setVisible(this.curTime, true)
+    this.changeModels.push(model)
+  }
+  // TODO bombModels去重
+  /**
+   *
+   * @param bombModels 爆炸的效果
+   * @param cycleCount 第几轮
+   */
+  processBomb(bombModels: CellModel[], cycleCount: number) {
+    debugger
+    console.log('执行消除')
+    while (bombModels.length > 0) {
+      let newBombModel = []
+      let bombTime = ANITIME.BOMB_DELAY
+      bombModels.forEach(function (model) {
+        if (model.status === CELL_STATUS.LINE) {
+          // 某一行  COMMON 的 cellMod 销毁
+          for (let i = 1; i <= GRID_WIDTH; i++) {
+            const curCells = this.cells[model.y][i]
+            if (curCells && curCells.status !== CELL_STATUS.COMMON) {
+              newBombModel.push(curCells)
+            }
+            this.crushCell(i, model.y, false, cycleCount)
+          }
+          this.addRowBomb(this.curTime, new Vec2(model.x, model.y))
+        } else if (model.status === CELL_STATUS.COLUMN) {
+          for (let i = 1; i <= GRID_HEIGHT; i++) {
+            if (this.cells[i][model.x]) {
+              if (this.cells[i][model.x].status != CELL_STATUS.COMMON) {
+                newBombModel.push(this.cells[i][model.x])
+              }
+              this.crushCell(model.x, i, false, cycleCount)
+            }
+          }
+          this.addColBomb(this.curTime, new Vec2(model.x, model.y))
+        } else if (model.status === CELL_STATUS.WRAP) {
+          let x = model.x
+          let y = model.y
+          for (let i = 1; i <= GRID_HEIGHT; i++) {
+            for (let j = 1; j <= GRID_WIDTH; j++) {
+              const delta = Math.abs(x - j) + Math.abs(y - i)
+              if (this.cells[i][j].status !== CELL_STATUS.COMMON) {
+                newBombModel.push(this.cells[i][j])
+              }
+              this.crushCell(j, i, false, cycleCount)
+            }
+          }
+        } else if (model.status === CELL_STATUS.BIRD) {
+          let crushType = model.type
+          if (bombTime < ANITIME.BOMB_BIRD_DELAY) {
+            bombTime = ANITIME.BOMB_BIRD_DELAY
+          }
+          if (crushType === CELL_TYPE.BIRD) {
+            crushType = this.getRandomCellType()
+          }
+
+          for (let i = 1; i <= GRID_HEIGHT; i++) {
+            for (let j = 1; j < GRID_WIDTH; j++) {
+              const curCell = this.cells[i][j]
+              if (curCell && curCell.type === crushType) {
+                newBombModel.push(this.cells[i][j])
+              }
+              this.crushCell(j, i, true, cycleCount)
+            }
+          }
+        }
+      }, this)
+      if (bombModels.length > 0) {
+        this.curTime += bombTime
+      }
+      bombModels = newBombModel
+    }
+  }
+  // 创建新的cell并且下落
+  down() {
+    console.log('下落')
+
+    let newCheckPoint = []
+    for (let i = 1; i <= GRID_WIDTH; i++) {
+      for (let j = 1; j < GRID_HEIGHT; j++) {
+        // 循环，如果某一个cell为null
+        if (this.cells[i][j] === null) {
+          let curRow = i
+          for (let k = curRow; k <= GRID_HEIGHT; k++) {
+            if (this.cells[k][j]) {
+              this.pushToChangeModels(this.cells[k][j])
+              newCheckPoint.push(this.cells[k][j])
+              this.cells[curRow][j] = this.cells[k][j]
+              this.cells[k][j] = null
+              this.cells[curRow][j].setXY(j, curRow)
+              this.cells[curRow][j].moveTo(new Vec2(j, curRow), this.curTime)
+              curRow++
+            }
+          }
+
+          let count = 1
+          for (var k = curRow; k <= GRID_HEIGHT; k++) {
+            this.cells[k][j] = new CellModel()
+            this.cells[k][j].init(this.getRandomCellType())
+            this.cells[k][j].setStartXY(j, count + GRID_HEIGHT)
+            this.cells[k][j].setXY(j, count + GRID_HEIGHT)
+            this.cells[k][j].moveTo(new Vec2(j, k), this.curTime)
+            count++
+            this.changeModels.push(this.cells[k][j])
+            newCheckPoint.push(this.cells[k][j])
+          }
+        }
+      }
+    }
+    this.curTime += ANITIME.TOUCH_MOVE + 0.3
+    return newCheckPoint
+  }
+  // 销毁Cell
+  crushCell(x: number, y: number, needShake: boolean, step: number) {
+    let model = this.cells[y][x]
+    this.pushToChangeModels(model)
+    if (needShake) {
+      // shake 动画
+      model.toShake(this.curTime)
+    }
+    let shakeTime = needShake ? ANITIME.DIE_SHAKE : 0
+    // 添加死忙动画
+    model.toDie(this.curTime + shakeTime)
+    // 销毁效果
+    this.addCrushEffect(this.curTime + shakeTime, new Vec2(model.x, model.y), step)
+    this.cells[y][x] = null
   }
 
   exchangeCell(pos1: Vec2, pos2: Vec2) {
@@ -197,9 +398,11 @@ export default class GameModel {
 
     // 检查下消除的其他节点，能不能生成更大范围的消除
     if (recursive && result.length >= 3) {
+      // samePoints 中的其他节点
       let subCheckPoints = exclusivePoint(samePoints, new Vec2(x, y))
       for (const point of subCheckPoints) {
         let subResult = this.checkPoint(point.x, point.y, false)
+        // ????  subResult[1] > result[1]
         if (subResult[1] > result[1] || (subResult[1] === result[1] && subResult[0].length > result[0].length)) {
           result = subResult
         }
@@ -260,4 +463,36 @@ export default class GameModel {
       }
     }
   }
+  /**
+   *
+   * @param {开始播放的时间} playTime
+   * @param {Cell的位置} pos
+   * @param {第几次消除，用于播放音效} step
+   */
+  addCrushEffect(playTime: number, pos: Vec2, step: number) {
+    this.efectsQueue.push({
+      playTime,
+      pos,
+      action: 'crush',
+      step
+    })
+  }
+
+  addRowBomb(playTime: number, pos: Vec2) {
+    this.efectsQueue.push({
+      playTime,
+      pos,
+      action: 'rowBomb'
+    })
+  }
+
+  addColBomb(playTime: number, pos: Vec2) {
+    this.efectsQueue.push({
+      playTime,
+      pos,
+      action: 'colBomb'
+    })
+  }
+
+  addWrapBomb() {}
 }

@@ -1,7 +1,9 @@
 import { _decorator, Component, Node, Vec2 } from 'cc'
+import CellModel from '../Model/CellModel'
 const { ccclass, property } = _decorator
 import GameModel from '../Model/GameModel'
 import { ContainerView } from '../Views/ContainerView'
+import { EFECT_TYPE } from '../Types/index'
 
 /**
  * Predefined variables
@@ -35,11 +37,11 @@ export class GameController extends Component {
     this.gameMode.init(4)
 
     this.containerView.setController(this)
-    // 初始化单元格，并且指定位置
+    // 初始化单元格视图，并且指定位置
     this.containerView.initWithCellModels(this.gameMode.getCells())
   }
 
-  selectCell(pos: Vec2) {
+  selectCell(pos: Vec2): [CellModel[], EFECT_TYPE[]] {
     return this.gameMode.selectCell(pos)
   }
 

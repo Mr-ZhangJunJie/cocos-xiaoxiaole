@@ -56,14 +56,13 @@ export default class CellModel {
   }
 
   moveTo(pos: Vec2, playTime: number) {
-    const srcPos = new Vec2(this.x, this.y)
-
     this.cmd.push({
       action: ACTION_TYPES.MOVETO,
       keepTime: ANITIME.TOUCH_MOVE,
       playTime: playTime,
       pos: pos
     })
+
     this.x = pos.x
     this.y = pos.y
   }

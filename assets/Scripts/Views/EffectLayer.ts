@@ -1,6 +1,8 @@
-import { _decorator, Component, Node } from 'cc'
+import { _decorator, Component, Node, tween, Tween, instantiate } from 'cc'
 import CellModel from '../Model/CellModel'
+import { CELL_WIDTH } from '../Model/ConstValue'
 const { ccclass, property } = _decorator
+import { EFECT_TYPE } from '../Types/index'
 
 /**
  * Predefined variables
@@ -22,12 +24,15 @@ export class EffectLayer extends Component {
   // [2]
   // @property
   // serializableDummy = 0;
-
+  animal: Tween<Node> = null
+  onLoad() {
+    this.animal = tween(this.node)
+  }
   start() {
     // [3]
   }
 
-  playEffects(efectsQueue: CellModel[] | undefined) {
+  playEffects(efectsQueue: EFECT_TYPE[] | undefined) {
     //不存在动画
     if (!efectsQueue || efectsQueue.length <= 0) {
       return
@@ -35,7 +40,41 @@ export class EffectLayer extends Component {
     let soundMap = {}
 
     efectsQueue.forEach(function (cmd) {
-      //    let delayTime  = cmd.
+      this.animal.delay(cmd.playTime)
+      this.animal.call(() => {
+        let instantEffect = null
+        let animation = null
+
+        if (cmd.action === 'crush') {
+          instantEffect = instantiate(this.crushEffect)
+          animation = instantEffect.getComponent(Animation)
+          animation.play('effect')
+          !soundMap['crush' + cmd.playTime] && this.audioUtils.playEliminate(cmd.step)
+          soundMap['crush' + cmd.playTime] = true
+        } else if (cmd.action === 'rowBomb') {
+          instantEffect = instantiate(this.bombWhite)
+          animation = instantEffect.getComponent(Animation)
+          animation.play('effect_line')
+        } else if (cmd.action === 'colBomb') {
+          instantEffect = instantiate(this.bombWhite)
+          animation = instantEffect.getComponent(Animation)
+          animation.play('effect_col')
+        }
+
+        instantEffect.x = CELL_WIDTH * (cmd.pos.x - 0.5)
+        instantEffect.y = CELL_WIDTH * (cmd.pos.y - 0.5)
+
+        this.node.addChild(instantEffect)
+        animation.on(
+          'finished',
+          function () {
+            instantEffect.destroy()
+          },
+          this
+        )
+      })
+
+      this.animal.start()
       // let delayTime
       //   let delayTime = cmd.playTime
       //   let callFunc = function () {
