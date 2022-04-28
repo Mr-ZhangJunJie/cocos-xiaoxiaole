@@ -5,6 +5,6 @@
   /* Add your custom configuration here. */
   "compilerOptions": {
     "strict": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true // 需要开启
   }
 }
